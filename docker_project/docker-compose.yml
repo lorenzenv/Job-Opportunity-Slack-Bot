@@ -1,0 +1,47 @@
+version: '3'
+services:
+
+  mongodb:
+    image: mongo
+    ports:
+    - 27017:27017
+
+  job_collector:
+    build: job_collector/
+    volumes:
+    - ./job_collector/:/app
+    depends_on:
+    - mongodb
+    env_file:
+    - .env
+    
+  postgresdbyall:
+    image: postgres
+    ports:
+    - "5555:5432"
+    environment:
+    - POSTGRES_USER=postgres
+    - POSTGRES_PASSWORD=${PASSWORD}
+    - POSTGRES_DB=agentur_jobs
+    env_file:
+    - .env
+    
+  etl:
+    build: etl_job/
+    volumes:
+    - ./etl_job/:/app
+    depends_on:
+    - mongodb
+    - postgresdbyall
+    env_file:
+    - .env
+
+  slack:
+    build: slack_bot/
+    volumes:
+    - ./slack_bot/:/app
+    depends_on:
+    - postgresdbyall
+    env_file:
+    - .env
+
